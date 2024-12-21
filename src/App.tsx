@@ -1,9 +1,8 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import Home from './screens/Home';
 import ChatScreen from './screens/ChatScreen';
+import Home from './screens/Home/';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 const Stack = createNativeStackNavigator();
 
@@ -11,10 +10,26 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name='Home' component={Home}/>
-        <Stack.Screen name='ChatScreen' component={ChatScreen}/>
-      </Stack.Navigator>
+      <SafeAreaProvider>
+        <SafeAreaView  style={{ flex: 1 }}>
+          <Stack.Navigator>
+            <Stack.Screen
+              name='Home'
+              component={Home}
+              options={{
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name='ChatScreen'
+              component={ChatScreen}
+              // options={{
+              //   headerShown: false
+              // }}
+            />
+          </Stack.Navigator>
+        </SafeAreaView>  
+      </SafeAreaProvider>
     </NavigationContainer>
   );
 }
