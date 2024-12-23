@@ -3,8 +3,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ChatScreen from './screens/ChatScreen';
 import Home from './screens/Home/';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { ROOT_STACK_ROUTES, RootStackRoutes } from './routes/root_satck';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackRoutes>();
 
 export default function App() {
 
@@ -14,18 +15,22 @@ export default function App() {
         <SafeAreaView  style={{ flex: 1 }}>
           <Stack.Navigator>
             <Stack.Screen
-              name='Home'
+              name={ROOT_STACK_ROUTES.HOME_SCREEN}
               component={Home}
               options={{
                 headerShown: false,
               }}
             />
             <Stack.Screen
-              name='ChatScreen'
+              name={ROOT_STACK_ROUTES.CHAT_SCREEN}
               component={ChatScreen}
-              // options={{
-              //   headerShown: false
-              // }}
+              options={({ route }) => {
+                const { name } = route.params;
+
+                return {
+                  headerTitle: name,
+                }
+              }}
             />
           </Stack.Navigator>
         </SafeAreaView>  

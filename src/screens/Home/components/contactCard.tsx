@@ -1,6 +1,7 @@
 import avatarImage from '../../../../assets/avatar.png';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import sizes from '../../../constants/sizes';
+import { ROOT_STACK_ROUTES } from '../../../routes/root_satck';
 
 interface messageItem {
   id: string;
@@ -12,7 +13,7 @@ interface messageItem {
 const ContactCard = ({ item, navigation }: { item: messageItem; navigation: any }) => (
   <TouchableOpacity
     style={styles.contactProfileCard}
-    onPress={() => navigation.navigate('ChatScreen', { contactName: item.name })}
+    onPress={() => navigation.navigate(ROOT_STACK_ROUTES.CHAT_SCREEN, { id: item.id, name: item.name })}
   >
     <Image source={avatarImage} style={styles.avatar} />
     <View style={styles.nameMessage}>
