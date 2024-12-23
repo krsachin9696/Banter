@@ -1,6 +1,5 @@
 import avatarImage from '../../../../assets/avatar.png';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import colors from '../../../constants/colors';
 import sizes from '../../../constants/sizes';
 
 interface messageItem {
@@ -32,9 +31,8 @@ const styles = StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    padding: sizes.CARD_INTERNAL_PADDING,
+    paddingVertical: sizes.CARD_INTERNAL_PADDING,
     borderRadius: sizes.BORDER_RADIUS,
-    marginBottom: sizes.CARD_INTERNAL_PADDING,
   },
   avatar: {
     width: 50,
@@ -53,7 +51,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   contactName: {
-    fontSize: sizes.TEXT.heading,
+    fontSize: sizes.TEXT.miniHeading,
     fontWeight: 'bold',
   },
   contactTime: {

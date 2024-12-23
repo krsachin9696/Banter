@@ -29,7 +29,7 @@ const Home = ({ navigation }: { navigation: any }) => {
           <Text style={styles.banter}>Banter</Text>
           <Entypo name="grid" size={24} color="white" />
         </View>
-        <Text style={styles.headingText}>Hi Shagunnn!!</Text>
+        <Text style={styles.headingText}>Hi Sachin!!</Text>
       </View>
       <View style={styles.contactSection}>
         <View style={styles.contactSectionHeading}>
@@ -107,11 +107,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   messagesCard: {
-    paddingVertical: sizes.CARD_INTERNAL_PADDING,
+    // paddingVertical: sizes.CARD_INTERNAL_PADDING,
   },
   messagesCardHeading: {
     fontWeight: 'bold',
     fontSize: sizes.TEXT.heading,
-    marginBottom: sizes.CARD_INTERNAL_PADDING,
   },
 });

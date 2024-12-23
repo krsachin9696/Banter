@@ -7,6 +7,7 @@ const TEXT = {
   input: 15,
   heading: 20,
   mainHeading: 28,
+  miniHeading: 18,
   basic: 15,
   mini: 12,
 };
@@ -17,7 +18,7 @@ const BORDER_RADIUS = 10;
 
 const CARD_INTERNAL_PADDING = 12;
 
-const SECTION_GAP_VERTICAL = 12;
+const SECTION_GAP_VERTICAL = 14;
 
 export default {
   TEXT,
