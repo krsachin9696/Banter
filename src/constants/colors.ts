@@ -13,6 +13,7 @@ const GREEN = "#00cc00";
 const ORANGE = "#ff9933";
 // const GREY = "#D3D3D3";
 const GREY = "#c0c0c0";
+const DARK_GREY = "#71797E";
 const DOGER_BLUE = "#005A9C"
 const SERENITY = "#b3cee9"
 const BLUE_GREEN = "#0D98BA"
@@ -67,4 +68,5 @@ export default {
   DOGER_BLUE,
   SERENITY,
   BLUE_GREEN,
+  DARK_GREY,
 } as const;
