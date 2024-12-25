@@ -16,7 +16,6 @@ const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
   const [name, setName] = useState("");
 
   const handleRegister = async () => {
-    console.log("calling handle register");
     if (!name.trim()) {
       Alert.alert("Error", "Name is required!");
       return;
@@ -29,7 +28,7 @@ const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
       const socket = connectSocket(user.id);
       socket.emit("register_user", {
         userID: user.id,
-      })
+      });
 
       Alert.alert("Success", "Registered successfully!");
       navigation.navigate(ROOT_STACK_ROUTES.HOME_SCREEN, { currentUser: user });

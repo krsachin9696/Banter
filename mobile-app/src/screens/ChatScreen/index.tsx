@@ -20,26 +20,14 @@ import sizes from "../../constants/sizes";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
 import { getSocket } from "../../services/socket";
+import styles from "./styles";
+import RenderMessage from "./components/renderMessage";
 
 interface ChatScreen
   extends NativeStackScreenProps<
     RootStackRoutes,
     ROOT_STACK_ROUTES.CHAT_SCREEN
   > {}
-
-type MessageType = "text" | "image" | "video";
-type MessageStatus = "sent" | "delivered" | "read";
-
-interface Message {
-  id: string;
-  type: MessageType;
-  text?: string;
-  mediaUri?: string;
-  senderID: string;
-  receiverID: string;
-  timestamp: string;
-  status?: MessageStatus;
-}
 
 export default function ChatScreen({
   navigation,
@@ -54,16 +42,6 @@ export default function ChatScreen({
 
   const socket = getSocket();
 
-  const getCurrentTime = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-    const period = hours >= 12 ? "PM" : "AM";
-    const formattedHours = hours % 12 || 12;
-    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    return `${formattedHours}:${formattedMinutes} ${period}`;
-  };
-
   const handleSendMessage = (type: MessageType, content?: string) => {
     if (!socket) {
       Alert.alert("Error", "Socket connection not established!");
@@ -71,9 +49,6 @@ export default function ChatScreen({
     }
 
     if (type === "text" && currentMessage.trim()) {
-
-      console.log("sending message over here");
-      
       const newMessage: Message = {
         id: `${Date.now()}`,
         type,
@@ -128,52 +103,6 @@ export default function ChatScreen({
     }
   };
 
-  const renderMessage = ({ item }: { item: Message }) => (
-    <View
-      style={[
-        styles.messageContainer,
-        item.senderID == currentUser.id
-          ? styles.userContainer
-          : styles.otherContainer,
-      ]}>
-      <View
-        style={[
-          styles.messageBubble,
-          item.senderID === currentUser.id
-            ? styles.userBubble
-            : styles.otherBubble,
-        ]}>
-        {item.type === "text" && (
-          <Text style={styles.messageText}>{item.text}</Text>
-        )}
-        {item.type === "image" && (
-          <Image
-            source={{ uri: item.mediaUri }}
-            style={styles.media}
-            resizeMode="cover"
-          />
-        )}
-        <View style={styles.messageInfo}>
-          <Text style={styles.timestamp}>{item.timestamp}</Text>
-          {item.senderID === currentUser.id && item.status && (
-            <MaterialCommunityIcons
-              name={
-                item.status === "sent"
-                  ? "check"
-                  : item.status === "delivered"
-                  ? "check-all"
-                  : "check-all"
-              }
-              size={16}
-              color={item.status === "read" ? "black" : colors.GREY}
-              style={styles.icon}
-            />
-          )}
-        </View>
-      </View>
-    </View>
-  );
-
   const renderIntro = () => (
     <View style={styles.introContainer}>
       <Text style={styles.introText}>
@@ -190,11 +119,7 @@ export default function ChatScreen({
         setMessages((prevMessages) => [...prevMessages, message]);
       });
     }
-
-    // Scroll to the bottom when messages change
     flatListRef.current?.scrollToEnd({ animated: true });
-
-    // Clean up the listener when the component unmounts
     return () => {
       if (socket) {
         socket.off("receive_message");
@@ -213,7 +138,7 @@ export default function ChatScreen({
           ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item.id}
-          renderItem={renderMessage}
+          renderItem={({ item }) => <RenderMessage item={item} currentUser={currentUser} />}
           contentContainerStyle={styles.messagesContainer}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={renderIntro}
@@ -240,109 +165,4 @@ export default function ChatScreen({
     </KeyboardAvoidingView>
   );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.WHITE,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: sizes.CARD_INTERNAL_PADDING,
-    backgroundColor: colors.GREY,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.GREY,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: colors.DARK_GREY,
-  },
-  introContainer: {
-    padding: sizes.CARD_INTERNAL_PADDING,
-    paddingTop: 0,
-  },
-  introText: {
-    fontSize: sizes.TEXT.mini,
-    color: colors.DARK_GREY,
-  },
-  boldText: {
-    fontWeight: "bold",
-    color: colors.BLUE_GREEN,
-  },
-  messagesContainer: {
-    flexGrow: 1,
-    padding: sizes.CARD_INTERNAL_PADDING,
-  },
-  messageContainer: {
-    marginVertical: 3,
-  },
-  userContainer: {
-    alignItems: "flex-end",
-  },
-  otherContainer: {
-    alignItems: "flex-start",
-  },
-  messageBubble: {
-    maxWidth: "90%",
-    padding: sizes.MESSAGE_CONTAINER_PADDING,
-    borderRadius: sizes.BORDER_RADIUS,
-  },
-  userBubble: {
-    backgroundColor: colors.BLUE_GREEN,
-  },
-  otherBubble: {
-    backgroundColor: colors.DARK_GREY,
-  },
-  messageText: {
-    fontSize: 16,
-    color: colors.WHITE,
-  },
-  messageInfo: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    marginTop: 4,
-  },
-  timestamp: {
-    fontSize: sizes.TEXT.mini,
-    color: colors.GREY,
-    marginRight: 3,
-  },
-  icon: {
-    marginLeft: 4,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 6,
-    padding: 4,
-    backgroundColor: "rgba(0, 0, 0, 0)",
-  },
-  textInput: {
-    flex: 1,
-    height: 45,
-    borderWidth: 1,
-    borderColor: colors.GREY,
-    borderRadius: 20,
-    paddingHorizontal: sizes.CARD_INTERNAL_PADDING,
-    fontSize: sizes.TEXT.input,
-  },
-  sendButton: {
-    padding: 12,
-    backgroundColor: colors.BLUE_GREEN,
-    borderRadius: 25,
-  },
-  media: {
-    width: 200,
-    height: 150,
-    borderRadius: sizes.BORDER_RADIUS,
-  },
-  mediaButton: {
-    paddingHorizontal: 8,
-  },
-});
 

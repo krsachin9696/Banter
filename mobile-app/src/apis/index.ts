@@ -1,1 +1,3 @@
-export const SERVER_URL = "http://192.168.189.231:3000";
+const ip1 = '192.168.193.231'
+
+export const SERVER_URL = `http://${ip1}:3000`;

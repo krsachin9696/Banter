@@ -1,20 +1,25 @@
-import avatarImage from '../../../../assets/avatar.png';
+import avatarImage from "../../../../assets/avatar.png";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import sizes from '../../../constants/sizes';
-import { ROOT_STACK_ROUTES } from '../../../routes/root_satck';
+import sizes from "../../../constants/sizes";
+import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../../routes/root_satck";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-interface messageItem {
-  id: string;
-  name: string;
-  latestMessage: string;
-  time: string;
+interface ContactCardProps {
+  item: ContactInfoProps;
+  navigation: NativeStackNavigationProp<RootStackRoutes>;
+  currentUser: User;
 }
 
-const ContactCard = ({ item, navigation, currentUser }: { item: messageItem; navigation: any, currentUser: User }) => (
+const ContactCard = ({ navigation, item, currentUser }: ContactCardProps) => (
   <TouchableOpacity
     style={styles.contactProfileCard}
-    onPress={() => navigation.navigate(ROOT_STACK_ROUTES.CHAT_SCREEN, { id: item.id, name: item.name, currentUser })}
-  >
+    onPress={() =>
+      navigation.navigate(ROOT_STACK_ROUTES.CHAT_SCREEN, {
+        id: item.id,
+        name: item.name,
+        currentUser,
+      })
+    }>
     <Image source={avatarImage} style={styles.avatar} />
     <View style={styles.nameMessage}>
       <View style={styles.nameTime}>
@@ -27,11 +32,12 @@ const ContactCard = ({ item, navigation, currentUser }: { item: messageItem; nav
 );
 
 export default ContactCard;
+
 const styles = StyleSheet.create({
   contactProfileCard: {
-    display: 'flex',
-    flexDirection: 'row',
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: sizes.CARD_INTERNAL_PADDING,
     borderRadius: sizes.BORDER_RADIUS,
   },
@@ -43,17 +49,17 @@ const styles = StyleSheet.create({
   },
   nameMessage: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
+    display: "flex",
+    flexDirection: "column",
   },
   nameTime: {
-    display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   contactName: {
     fontSize: sizes.TEXT.miniHeading,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   contactTime: {
     fontSize: sizes.TEXT.mini,
@@ -61,7 +67,6 @@ const styles = StyleSheet.create({
   },
   contactMessage: {
     fontSize: sizes.TEXT.basic,
-    color: '#808080',
+    color: "#808080",
   },
 });
-

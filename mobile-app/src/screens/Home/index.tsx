@@ -18,13 +18,6 @@ import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root_satck";
 import axios from "axios";
 import { SERVER_URL } from "../../apis";
 
-interface ContactProps {
-  id: string;
-  name: string;
-  latestMessage: string;
-  time: string;
-}
-
 interface HomeScreenProps
   extends NativeStackScreenProps<
     RootStackRoutes,
@@ -33,7 +26,7 @@ interface HomeScreenProps
 
 const Home = ({ route, navigation }: HomeScreenProps) => {
   const currentUser = route.params.currentUser;
-  const [contacts, setContacts] = useState<ContactProps[]>();
+  const [contacts, setContacts] = useState<ContactInfoProps[]>();
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchContacts = async () => {
