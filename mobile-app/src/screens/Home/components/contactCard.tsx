@@ -10,10 +10,10 @@ interface messageItem {
   time: string;
 }
 
-const ContactCard = ({ item, navigation }: { item: messageItem; navigation: any }) => (
+const ContactCard = ({ item, navigation, currentUser }: { item: messageItem; navigation: any, currentUser: User }) => (
   <TouchableOpacity
     style={styles.contactProfileCard}
-    onPress={() => navigation.navigate(ROOT_STACK_ROUTES.CHAT_SCREEN, { id: item.id, name: item.name })}
+    onPress={() => navigation.navigate(ROOT_STACK_ROUTES.CHAT_SCREEN, { id: item.id, name: item.name, currentUser })}
   >
     <Image source={avatarImage} style={styles.avatar} />
     <View style={styles.nameMessage}>

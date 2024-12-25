@@ -1,14 +1,31 @@
 import React, { useEffect, useRef, useState } from "react";
-import { StatusBar, StyleSheet, Text, View, TextInput, FlatList, TouchableOpacity, Image, KeyboardAvoidingView, Platform } from "react-native";
+import {
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
 import colors from "../../constants/colors";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root_satck";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import sizes from "../../constants/sizes";
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Ionicons from "@expo/vector-icons/Ionicons";
 import * as ImagePicker from "expo-image-picker";
+import { getSocket } from "../../services/socket";
 
-interface ChatScreen extends NativeStackScreenProps<RootStackRoutes, ROOT_STACK_ROUTES.CHAT_SCREEN> { }
+interface ChatScreen
+  extends NativeStackScreenProps<
+    RootStackRoutes,
+    ROOT_STACK_ROUTES.CHAT_SCREEN
+  > {}
 
 type MessageType = "text" | "image" | "video";
 type MessageStatus = "sent" | "delivered" | "read";
@@ -18,50 +35,24 @@ interface Message {
   type: MessageType;
   text?: string;
   mediaUri?: string;
-  sender: "user" | "other";
+  senderID: string;
+  receiverID: string;
   timestamp: string;
   status?: MessageStatus;
 }
 
-export default function ChatScreen({ navigation, route }: ChatScreen): JSX.Element {
-  const { id, name } = route.params;
+export default function ChatScreen({
+  navigation,
+  route,
+}: ChatScreen): JSX.Element {
+  const { id: receiverId, name, currentUser } = route.params;
+  const currentUserId = currentUser.id;
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "text",
-      text: "Hello! How are you? Hello! How are you?",
-      sender: "other",
-      timestamp: "10:00 AM",
-    },
-    {
-      id: "2",
-      type: "text",
-      text: "I'm doing well, thanks! How about you?",
-      sender: "user",
-      timestamp: "10:01 AM",
-      status: "read",
-    },
-    {
-      id: "3",
-      type: "text",
-      text: "Hello! How are you? Hello! How are you?",
-      sender: "other",
-      timestamp: "10:00 AM",
-    },
-    {
-      id: "4",
-      type: "text",
-      text: "I'm doing well, thanks! How about you?",
-      sender: "user",
-      timestamp: "10:01 AM",
-      status: "delivered",
-    },
-  ]);
-
+  const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
-
   const flatListRef = useRef<FlatList>(null);
+
+  const socket = getSocket();
 
   const getCurrentTime = () => {
     const now = new Date();
@@ -74,31 +65,48 @@ export default function ChatScreen({ navigation, route }: ChatScreen): JSX.Eleme
   };
 
   const handleSendMessage = (type: MessageType, content?: string) => {
+    if (!socket) {
+      Alert.alert("Error", "Socket connection not established!");
+      return;
+    }
+
     if (type === "text" && currentMessage.trim()) {
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: `${prevMessages.length + 1}`,
-          type,
-          text: currentMessage.trim(),
-          sender: "user",
-          timestamp: getCurrentTime(),
-          status: "sent",
-        },
-      ]);
+
+      console.log("sending message over here");
+      
+      const newMessage: Message = {
+        id: `${Date.now()}`,
+        type,
+        text: currentMessage.trim(),
+        senderID: currentUser.id,
+        timestamp: getCurrentTime(),
+        status: "sent",
+        receiverID: receiverId,
+      };
+
+      // Update local state
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
       setCurrentMessage("");
+
+      socket.emit("send_message", {...newMessage});
     } else if ((type === "image" || type === "video") && content) {
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: `${prevMessages.length + 1}`,
-          type,
-          mediaUri: content,
-          sender: "user",
-          timestamp: getCurrentTime(),
-          status: "sent",
-        },
-      ]);
+      const newMessage: Message = {
+        id: `${Date.now()}`,
+        type,
+        mediaUri: content,
+        senderID: currentUser.id,
+        timestamp: getCurrentTime(),
+        status: "sent",
+        receiverID: receiverId,
+      };
+
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+
+      socket.emit("send_message", {
+        senderId: currentUserId,
+        receiverId,
+        message: newMessage.mediaUri,
+      });
     }
   };
 
@@ -106,37 +114,48 @@ export default function ChatScreen({ navigation, route }: ChatScreen): JSX.Eleme
     let result;
     if (type === "image") {
       result = await ImagePicker.launchImageLibraryAsync({
-        // mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
         quality: 1,
       });
     }
-    if (result && !result.canceled && result.assets && result.assets.length > 0) {
+    if (
+      result &&
+      !result.canceled &&
+      result.assets &&
+      result.assets.length > 0
+    ) {
       handleSendMessage(type, result.assets[0].uri);
     }
-    
   };
 
   const renderMessage = ({ item }: { item: Message }) => (
     <View
       style={[
         styles.messageContainer,
-        item.sender === "user" ? styles.userContainer : styles.otherContainer,
-      ]}
-    >
+        item.senderID == currentUser.id
+          ? styles.userContainer
+          : styles.otherContainer,
+      ]}>
       <View
         style={[
           styles.messageBubble,
-          item.sender === "user" ? styles.userBubble : styles.otherBubble,
-        ]}
-      >
-        {item.type === "text" && <Text style={styles.messageText}>{item.text}</Text>}
+          item.senderID === currentUser.id
+            ? styles.userBubble
+            : styles.otherBubble,
+        ]}>
+        {item.type === "text" && (
+          <Text style={styles.messageText}>{item.text}</Text>
+        )}
         {item.type === "image" && (
-          <Image source={{ uri: item.mediaUri }} style={styles.media} resizeMode="cover" />
+          <Image
+            source={{ uri: item.mediaUri }}
+            style={styles.media}
+            resizeMode="cover"
+          />
         )}
         <View style={styles.messageInfo}>
           <Text style={styles.timestamp}>{item.timestamp}</Text>
-          {item.sender === "user" && item.status && (
+          {item.senderID === currentUser.id && item.status && (
             <MaterialCommunityIcons
               name={
                 item.status === "sent"
@@ -146,7 +165,7 @@ export default function ChatScreen({ navigation, route }: ChatScreen): JSX.Eleme
                   : "check-all"
               }
               size={16}
-              color={item.status === "read" ? 'black' : colors.GREY}
+              color={item.status === "read" ? "black" : colors.GREY}
               style={styles.icon}
             />
           )}
@@ -158,54 +177,70 @@ export default function ChatScreen({ navigation, route }: ChatScreen): JSX.Eleme
   const renderIntro = () => (
     <View style={styles.introContainer}>
       <Text style={styles.introText}>
-        This is the very beginning of your direct message history with <Text style={styles.boldText}>{name}</Text>.
+        This is the very beginning of your direct message history with{" "}
+        <Text style={styles.boldText}>{name}</Text>.
       </Text>
     </View>
   );
 
   useEffect(() => {
+    if (socket) {
+      // Listen for incoming messages
+      socket.on("receive_message", (message: Message) => {
+        setMessages((prevMessages) => [...prevMessages, message]);
+      });
+    }
+
     // Scroll to the bottom when messages change
     flatListRef.current?.scrollToEnd({ animated: true });
-  }, [messages]);
+
+    // Clean up the listener when the component unmounts
+    return () => {
+      if (socket) {
+        socket.off("receive_message");
+      }
+    };
+  }, [socket, messages]);
 
   return (
     <KeyboardAvoidingView
-  style={{ flex: 1 }}
+      style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={80} 
->
-    <View style={styles.container}>
-      <StatusBar backgroundColor={colors.WHITE} barStyle="dark-content" />
+      keyboardVerticalOffset={80}>
+      <View style={styles.container}>
+        <StatusBar backgroundColor={colors.WHITE} barStyle="dark-content" />
         <FlatList
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item) => item.id}
-            renderItem={renderMessage}
-            // contentContainerStyle={styles.messagesContainer}
-            contentContainerStyle={
-              styles.messagesContainer}
-            showsVerticalScrollIndicator={false}
-            ListHeaderComponent={renderIntro}
+          ref={flatListRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMessage}
+          contentContainerStyle={styles.messagesContainer}
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={renderIntro}
         />
-        
-      <View style={styles.inputContainer}>
-        <TouchableOpacity style={styles.mediaButton} onPress={() => pickMedia("image")}>
-          <Ionicons name="image" size={24} color={colors.DARK_GREY} />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.textInput}
-          placeholder="Message..."
-          value={currentMessage}
-          onChangeText={setCurrentMessage}
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={() => handleSendMessage("text")}>
-          <Ionicons name="send" size={20} color="white" />
-        </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <TouchableOpacity
+            style={styles.mediaButton}
+            onPress={() => pickMedia("image")}>
+            <Ionicons name="image" size={24} color={colors.DARK_GREY} />
+          </TouchableOpacity>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Message..."
+            value={currentMessage}
+            onChangeText={setCurrentMessage}
+          />
+          <TouchableOpacity
+            style={styles.sendButton}
+            onPress={() => handleSendMessage("text")}>
+            <Ionicons name="send" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
-      </View>
-      </KeyboardAvoidingView>
+    </KeyboardAvoidingView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
@@ -282,7 +317,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     gap: 6,
     padding: 4,
     backgroundColor: "rgba(0, 0, 0, 0)",
@@ -310,3 +345,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
 });
+
