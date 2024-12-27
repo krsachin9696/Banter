@@ -24,6 +24,11 @@ app.use(bodyParser.json());
 const users = [];
 const messages = []; // Example: { senderId: string, receiverId: string, message: string, timestamp: string }
 
+app.get("/", (req, res) => {
+  console.log("server is up and running");
+  return res.status(200).json({ message: "server is up and running"})
+})
+
 // API to register a user
 app.post("/register", (req, res) => {
   const { name } = req.body;

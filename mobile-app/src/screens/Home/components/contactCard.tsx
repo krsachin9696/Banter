@@ -1,7 +1,7 @@
 import avatarImage from "../../../../assets/avatar.png";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import sizes from "../../../constants/sizes";
-import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../../routes/root_satck";
+import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../../routes/root-satck";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 interface ContactCardProps {

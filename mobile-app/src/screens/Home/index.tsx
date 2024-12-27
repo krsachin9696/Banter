@@ -14,7 +14,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Entypo from "@expo/vector-icons/Entypo";
 import ContactCard from "./components/contactCard";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root_satck";
+import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root-satck";
 import axios from "axios";
 import { SERVER_URL } from "../../apis";
 

@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import colors from "../../constants/colors";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root_satck";
+import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root-satck";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { getSocket } from "../../services/socket";
 import styles from "./styles";
