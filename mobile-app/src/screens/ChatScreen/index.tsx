@@ -1,13 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
   StatusBar,
-  StyleSheet,
   Text,
   View,
   TextInput,
   FlatList,
   TouchableOpacity,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -15,13 +13,11 @@ import {
 import colors from "../../constants/colors";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root_satck";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import sizes from "../../constants/sizes";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as ImagePicker from "expo-image-picker";
 import { getSocket } from "../../services/socket";
 import styles from "./styles";
 import RenderMessage from "./components/renderMessage";
+import getCurrentTime from "../../utils/getCurrentTime";
 
 interface ChatScreen
   extends NativeStackScreenProps<
@@ -42,7 +38,7 @@ export default function ChatScreen({
 
   const socket = getSocket();
 
-  const handleSendMessage = (type: MessageType, content?: string) => {
+  const handleSendMessage = (type: MessageType) => {
     if (!socket) {
       Alert.alert("Error", "Socket connection not established!");
       return;
@@ -64,42 +60,6 @@ export default function ChatScreen({
       setCurrentMessage("");
 
       socket.emit("send_message", {...newMessage});
-    } else if ((type === "image" || type === "video") && content) {
-      const newMessage: Message = {
-        id: `${Date.now()}`,
-        type,
-        mediaUri: content,
-        senderID: currentUser.id,
-        timestamp: getCurrentTime(),
-        status: "sent",
-        receiverID: receiverId,
-      };
-
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-      socket.emit("send_message", {
-        senderId: currentUserId,
-        receiverId,
-        message: newMessage.mediaUri,
-      });
-    }
-  };
-
-  const pickMedia = async (type: MessageType) => {
-    let result;
-    if (type === "image") {
-      result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: false,
-        quality: 1,
-      });
-    }
-    if (
-      result &&
-      !result.canceled &&
-      result.assets &&
-      result.assets.length > 0
-    ) {
-      handleSendMessage(type, result.assets[0].uri);
     }
   };
 
@@ -146,7 +106,8 @@ export default function ChatScreen({
         <View style={styles.inputContainer}>
           <TouchableOpacity
             style={styles.mediaButton}
-            onPress={() => pickMedia("image")}>
+            // onPress={() => pickMedia("image")}
+          >
             <Ionicons name="image" size={24} color={colors.DARK_GREY} />
           </TouchableOpacity>
           <TextInput
