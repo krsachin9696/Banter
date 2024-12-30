@@ -1,20 +1,20 @@
 import avatarImage from "../../../../assets/avatar.png";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import sizes from "../../../constants/sizes";
-import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../../routes/root-satck";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../../routes/auth-stack";
 
 interface ContactCardProps {
   item: ContactInfoProps;
-  navigation: NativeStackNavigationProp<RootStackRoutes>;
+  navigation: NativeStackNavigationProp<AuthStackRoutes>;
   currentUser: User;
 }
 
-const ContactCard = ({ navigation, item, currentUser }: ContactCardProps) => (
+const ContactCard = ({ item, navigation, currentUser }: ContactCardProps) => (
   <TouchableOpacity
     style={styles.contactProfileCard}
     onPress={() =>
-      navigation.navigate(ROOT_STACK_ROUTES.CHAT_SCREEN, {
+      navigation.navigate(AUTH_STACK_ROUTES.CHAT_SCREEN, {
         id: item.id,
         name: item.name,
         currentUser,

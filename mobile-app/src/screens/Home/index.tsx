@@ -14,14 +14,14 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Entypo from "@expo/vector-icons/Entypo";
 import ContactCard from "./components/contactCard";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root-satck";
 import axios from "axios";
 import { SERVER_URL } from "../../apis";
+import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
 
 interface HomeScreenProps
   extends NativeStackScreenProps<
-    RootStackRoutes,
-    ROOT_STACK_ROUTES.HOME_SCREEN
+    AuthStackRoutes,
+    AUTH_STACK_ROUTES.HOME_SCREEN
   > {}
 
 const Home = ({ route, navigation }: HomeScreenProps) => {

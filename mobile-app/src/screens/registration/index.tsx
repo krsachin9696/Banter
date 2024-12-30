@@ -7,6 +7,7 @@ import { connectSocket } from "../../services/socket";
 import { SERVER_URL } from "../../apis";
 import { UNAUTH_STACK_ROUTES, UnauthStackRoutes } from "../../routes/unauth-stack";
 import { useNavigation } from "@react-navigation/native";
+import { AUTH_STACK_ROUTES } from "../../routes/auth-stack";
 
 interface RegisterScreenProps
   extends NativeStackScreenProps<
@@ -39,7 +40,10 @@ const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
       });
 
       Alert.alert("Success", "Registered successfully!");
-      rootNavigator?.navigate(ROOT_STACK_ROUTES.AUTH_STACK_LAYOUT);
+      rootNavigator?.navigate(ROOT_STACK_ROUTES.AUTH_STACK_LAYOUT, {
+        screen: AUTH_STACK_ROUTES.HOME_SCREEN,
+        params: { currentUser: user },
+      });
     } catch (error) {
       console.error("Registration failed:", error, JSON.stringify(error));
       Alert.alert("Error", "Registration failed!");
