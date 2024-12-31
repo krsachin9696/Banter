@@ -12,17 +12,17 @@ import {
 } from "react-native";
 import colors from "../../constants/colors";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root-satck";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { getSocket } from "../../services/socket";
 import styles from "./styles";
 import RenderMessage from "./components/renderMessage";
 import getCurrentTime from "../../utils/getCurrentTime";
+import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
 
 interface ChatScreen
   extends NativeStackScreenProps<
-    RootStackRoutes,
-    ROOT_STACK_ROUTES.CHAT_SCREEN
+    AuthStackRoutes,
+    AUTH_STACK_ROUTES.CHAT_SCREEN
   > {}
 
 export default function ChatScreen({
