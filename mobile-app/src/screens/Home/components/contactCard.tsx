@@ -7,17 +7,15 @@ import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../../routes/auth-stack";
 interface ContactCardProps {
   item: ContactInfoProps;
   navigation: NativeStackNavigationProp<AuthStackRoutes>;
-  currentUser: User;
 }
 
-const ContactCard = ({ item, navigation, currentUser }: ContactCardProps) => (
+const ContactCard = ({ item, navigation }: ContactCardProps) => (
   <TouchableOpacity
     style={styles.contactProfileCard}
     onPress={() =>
       navigation.navigate(AUTH_STACK_ROUTES.CHAT_SCREEN, {
         id: item.id,
         name: item.name,
-        currentUser,
       })
     }>
     <Image source={avatarImage} style={styles.avatar} />

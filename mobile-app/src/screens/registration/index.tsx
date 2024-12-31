@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
 import axios from "axios";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -8,38 +8,44 @@ import { SERVER_URL } from "../../apis";
 import { UNAUTH_STACK_ROUTES, UnauthStackRoutes } from "../../routes/unauth-stack";
 import { useNavigation } from "@react-navigation/native";
 import { AUTH_STACK_ROUTES } from "../../routes/auth-stack";
+import UserContext from "../../context/userContext";
 
 interface RegisterScreenProps
   extends NativeStackScreenProps<
     UnauthStackRoutes,
     UNAUTH_STACK_ROUTES.REGISTER
-  > {}
+  > { }
 
 const RegisterScreen = ({ navigation }: RegisterScreenProps) => {
 
   const rootNavigator = useNavigation().getParent();
+  const context = useContext(UserContext);
+
+  if (!context) {
+    throw new Error("RegisterScreen must be used within a UserContextProvider");
+  }
+
+  const { login } = context;
 
   const [name, setName] = useState("");
 
   const handleRegister = async () => {
-    console.log("heelo")
     if (!name.trim()) {
       Alert.alert("Error", "Name is required!");
       return;
     }
 
     try {
-    console.log("alkdsjf")
       const response = await axios.post(`${SERVER_URL}/register`, { name });
       const user = response.data.user;
-      console.log("kjlkj")
+
+      login(user.id, user.name);
 
       const socket = connectSocket(user.id);
       socket.emit("register_user", {
         userID: user.id,
       });
 
-      Alert.alert("Success", "Registered successfully!");
       rootNavigator?.navigate(ROOT_STACK_ROUTES.AUTH_STACK_LAYOUT, {
         screen: AUTH_STACK_ROUTES.HOME_SCREEN,
         params: { currentUser: user },

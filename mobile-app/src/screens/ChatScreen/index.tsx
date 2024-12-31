@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   StatusBar,
   Text,
@@ -18,6 +18,7 @@ import styles from "./styles";
 import RenderMessage from "./components/renderMessage";
 import getCurrentTime from "../../utils/getCurrentTime";
 import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
+import UserContext from "../../context/userContext";
 
 interface ChatScreen
   extends NativeStackScreenProps<
@@ -29,8 +30,15 @@ export default function ChatScreen({
   navigation,
   route,
 }: ChatScreen): JSX.Element {
-  const { id: receiverId, name, currentUser } = route.params;
-  const currentUserId = currentUser.id;
+  const { id: receiverId, name } = route.params;
+
+  const context = useContext(UserContext);
+
+  if (!context) {
+    throw new Error("Home screen must be used without a UserContextProvider");
+  }
+
+  const { user } = context;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
@@ -49,7 +57,7 @@ export default function ChatScreen({
         id: `${Date.now()}`,
         type,
         text: currentMessage.trim(),
-        senderID: currentUser.id,
+        senderID: user!.id,
         timestamp: getCurrentTime(),
         status: "sent",
         receiverID: receiverId,
@@ -98,7 +106,7 @@ export default function ChatScreen({
           ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <RenderMessage item={item} currentUser={currentUser} />}
+          renderItem={({ item }) => <RenderMessage item={item} currentUser={user!} />}
           contentContainerStyle={styles.messagesContainer}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={renderIntro}

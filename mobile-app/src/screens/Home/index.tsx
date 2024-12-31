@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -16,16 +16,30 @@ import ContactCard from "./components/contactCard";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import axios from "axios";
 import { SERVER_URL } from "../../apis";
-import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
+import { AuthStackRoutes } from "../../routes/auth-stack";
+import UserContext from "../../context/userContext";
+
+// interface HomeScreenProps
+//   extends NativeStackScreenProps<
+//     AuthStackRoutes,
+//     AUTH_STACK_ROUTES.HOME_SCREEN
+//   > {}
 
 interface HomeScreenProps
   extends NativeStackScreenProps<
-    AuthStackRoutes,
-    AUTH_STACK_ROUTES.HOME_SCREEN
+    AuthStackRoutes
+    // AUTH_STACK_ROUTES.HOME_SCREEN
   > {}
 
 const Home = ({ route, navigation }: HomeScreenProps) => {
-  const currentUser = route.params.currentUser;
+  const context = useContext(UserContext);
+
+  if (!context) {
+    throw new Error("Home screen must be used without a UserContextProvider");
+  }
+
+  const { user } = context;
+
   const [contacts, setContacts] = useState<ContactInfoProps[]>();
   const [refreshing, setRefreshing] = useState(false);
 
@@ -57,7 +71,7 @@ const Home = ({ route, navigation }: HomeScreenProps) => {
           <Text style={styles.banter}>Banter</Text>
           <Entypo name="grid" size={24} color="white" />
         </View>
-        <Text style={styles.headingText}>Hi {currentUser.name}!!</Text>
+        <Text style={styles.headingText}>Hi {user?.name}!!</Text>
       </View>
       <View style={styles.contactSection}>
         <View style={styles.contactSectionHeading}>
@@ -71,7 +85,7 @@ const Home = ({ route, navigation }: HomeScreenProps) => {
             data={contacts}
             keyExtractor={(item) => item.id}
             renderItem={(item) =>
-              ContactCard({ ...item, navigation, currentUser })
+              ContactCard({ ...item, navigation })
             }
             showsVerticalScrollIndicator={false}
             refreshControl={
