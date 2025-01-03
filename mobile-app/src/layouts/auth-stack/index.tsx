@@ -3,6 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
 import Home from "../../screens/Home";
 import ChatScreen from "../../screens/ChatScreen";
+import { SocketProvider } from "../../context/SocketContextProvider";
 
 const AuthStack = createNativeStackNavigator<AuthStackRoutes>();
 

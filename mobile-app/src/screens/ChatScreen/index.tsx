@@ -31,6 +31,7 @@ export default function ChatScreen({
   route,
 }: ChatScreen): JSX.Element {
   const { id: receiverId, name } = route.params;
+  console.log(route.params, 'this is route params ')
 
   const context = useContext(UserContext);
 

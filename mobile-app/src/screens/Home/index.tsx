@@ -1,6 +1,5 @@
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import {
-  StyleSheet,
   Text,
   View,
   FlatList,
@@ -9,7 +8,6 @@ import {
   RefreshControl,
 } from "react-native";
 import colors from "../../constants/colors";
-import sizes from "../../constants/sizes";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import Entypo from "@expo/vector-icons/Entypo";
 import ContactCard from "./components/contactCard";
@@ -18,26 +16,23 @@ import axios from "axios";
 import { SERVER_URL } from "../../apis";
 import { AuthStackRoutes } from "../../routes/auth-stack";
 import UserContext from "../../context/userContext";
-
-// interface HomeScreenProps
-//   extends NativeStackScreenProps<
-//     AuthStackRoutes,
-//     AUTH_STACK_ROUTES.HOME_SCREEN
-//   > {}
+import { getSocket } from "../../services/socket";
+import { styles } from "./styles";
 
 interface HomeScreenProps
   extends NativeStackScreenProps<
     AuthStackRoutes
-    // AUTH_STACK_ROUTES.HOME_SCREEN
   > {}
 
 const Home = ({ route, navigation }: HomeScreenProps) => {
   const context = useContext(UserContext);
+  // const { socket } = useSocket();
+  const socket = getSocket();
 
   if (!context) {
     throw new Error("Home screen must be used without a UserContextProvider");
   }
-
+  
   const { user } = context;
 
   const [contacts, setContacts] = useState<ContactInfoProps[]>();
@@ -45,13 +40,35 @@ const Home = ({ route, navigation }: HomeScreenProps) => {
 
   const fetchContacts = async () => {
     try {
-      const response = await axios.get(`${SERVER_URL}/users`);
+      const response = await axios.get(`${SERVER_URL}/users`);  
+      // console.log(response.data, "initial response ");
       setContacts(response.data);
     } catch (error) {
       console.error("Error fetching contacts:", error);
       Alert.alert("Error", "Failed to fetch contacts!");
     }
   };
+
+  useEffect(() => {
+    if (socket) {
+      const handleMessage = (message: Message) => {
+        setContacts((prevContacts) => {
+          return prevContacts?.map((contact) => {
+            if (contact.userID === message.senderID) {
+              return {
+                ...contact,
+                latestMessage: message.type === "text" ? message.text : "New Media",
+                time: message.timestamp,
+              };
+            }
+            return contact;
+          });
+        });
+      };
+  
+      socket.on("receive_message", handleMessage);
+    }
+  }, [socket]);
 
   useEffect(() => {
     fetchContacts();
@@ -83,7 +100,7 @@ const Home = ({ route, navigation }: HomeScreenProps) => {
           <Text style={styles.messagesCardHeading}>Messages</Text>
           <FlatList
             data={contacts}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item.userID}
             renderItem={(item) =>
               ContactCard({ ...item, navigation })
             }
@@ -102,64 +119,3 @@ const Home = ({ route, navigation }: HomeScreenProps) => {
 };
 
 export default Home;
-
-const styles = StyleSheet.create({
-  homeBody: {
-    height: "100%",
-    backgroundColor: colors.BLUE_GREEN,
-    display: "flex",
-    flexDirection: "column",
-  },
-  heading: {
-    padding: sizes.CARD_INTERNAL_PADDING,
-    height: "15%",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-  },
-  banterContainer: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingRight: sizes.CARD_INTERNAL_PADDING,
-  },
-  banter: {
-    fontSize: sizes.TEXT.mainHeading,
-    fontStyle: "normal",
-    fontWeight: "bold",
-    color: colors.WHITE,
-  },
-  headingText: {
-    fontSize: sizes.TEXT.heading,
-    fontWeight: "bold",
-    color: colors.WHITE,
-  },
-  contactSection: {
-    padding: sizes.CARD_INTERNAL_PADDING,
-    backgroundColor: colors.WHITE,
-    height: "85%",
-    borderTopLeftRadius: 35,
-    borderTopRightRadius: 35,
-  },
-  contactSectionHeading: {
-    width: "100%",
-    display: "flex",
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: sizes.CARD_INTERNAL_PADDING,
-  },
-  searchBox: {
-    padding: sizes.CARD_INTERNAL_PADDING,
-    backgroundColor: colors.GREY,
-    borderRadius: 30,
-    flex: 1,
-  },
-  messagesCard: {
-    // paddingVertical: sizes.CARD_INTERNAL_PADDING,
-  },
-  messagesCardHeading: {
-    fontWeight: "bold",
-    fontSize: sizes.TEXT.heading,
-  },
-});
