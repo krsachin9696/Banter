@@ -61,7 +61,7 @@ app.get("/users", (req, res) => {
     const latestMessage = userMessages[0]?.message || "No messages yet";
     const time = userMessages[0]?.timestamp || "N/A";
 
-    return { id: user.id, name: user.name, latestMessage, time };
+    return { userID: user.id, name: user.name, latestMessage, time };
   });
 
   return res.status(200).json(enrichedUsers);
@@ -101,6 +101,7 @@ io.on("connection", (socket) => {
   socket.on("register_user", (user) => {
     const userID = user.userID;
     userSocketMap[userID] = socket.id;
+    // console.log(userSocketMap, "userSocketMap");
   });
 
   // Handle one-to-one messaging
@@ -108,6 +109,8 @@ io.on("connection", (socket) => {
 
     const receiverID = newMessage.receiverID;
     const receiverSocketId = userSocketMap[receiverID];
+    console.log(newMessage, 'this is the incoming message');
+    console.log(userSocketMap, "this is map", receiverSocketId, "receiver socket id");
 
     if (receiverSocketId) {
       // Emit message to the receiver
