@@ -1,6 +1,5 @@
 import avatarImage from "../../../../assets/avatar.png";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import sizes from "../../../constants/sizes";
+import { Image, Text, TouchableOpacity, View } from "react-native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../../routes/auth-stack";
 import { styles } from "../styles";

@@ -24,14 +24,13 @@ interface ChatScreen
   extends NativeStackScreenProps<
     AuthStackRoutes,
     AUTH_STACK_ROUTES.CHAT_SCREEN
-  > {}
+  > { }
 
 export default function ChatScreen({
   navigation,
   route,
 }: ChatScreen): JSX.Element {
   const { id: receiverId, name } = route.params;
-  console.log(route.params, 'this is route params ')
 
   const context = useContext(UserContext);
 
@@ -58,7 +57,7 @@ export default function ChatScreen({
         id: `${Date.now()}`,
         type,
         text: currentMessage.trim(),
-        senderID: user!.id,
+        senderID: user?.id || "sksd",
         timestamp: getCurrentTime(),
         status: "sent",
         receiverID: receiverId,
@@ -68,7 +67,7 @@ export default function ChatScreen({
       setMessages((prevMessages) => [...prevMessages, newMessage]);
       setCurrentMessage("");
 
-      socket.emit("send_message", {...newMessage});
+      socket.emit("send_message", { ...newMessage });
     }
   };
 
@@ -115,7 +114,7 @@ export default function ChatScreen({
         <View style={styles.inputContainer}>
           <TouchableOpacity
             style={styles.mediaButton}
-            // onPress={() => pickMedia("image")}
+          // onPress={() => pickMedia("image")}
           >
             <Ionicons name="image" size={24} color={colors.DARK_GREY} />
           </TouchableOpacity>
