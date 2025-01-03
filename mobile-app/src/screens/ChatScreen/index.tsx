@@ -88,11 +88,11 @@ export default function ChatScreen({
       });
     }
     flatListRef.current?.scrollToEnd({ animated: true });
-    return () => {
-      if (socket) {
-        socket.off("receive_message");
-      }
-    };
+    // return () => {
+    //   if (socket) {
+    //     socket.off("receive_message");
+    //   }
+    // };
   }, [socket, messages]);
 
   return (

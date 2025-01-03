@@ -6,7 +6,10 @@ import ChatScreen from "../../screens/ChatScreen";
 import { useEffect } from "react";
 import { getSocket } from "../../services/socket";
 import { useDispatch } from "react-redux";
-import { updateContact } from "../../store/slices/contactsSlice";
+import { setContacts, updateContact } from "../../store/slices/contactsSlice";
+import { SERVER_URL } from "../../apis";
+import axios from "axios";
+import { Alert } from "react-native";
 
 const AuthStack = createNativeStackNavigator<AuthStackRoutes>();
 
@@ -14,12 +17,26 @@ export default function AuthStackLayout() {
   const socket = getSocket();
   const dispatch = useDispatch();
 
-  // useEffect(() => {
-  socket.on("receive_message", ((message: Message) => {
+  useEffect(() => {
+    socket.on("receive_message", ((message: Message) => {
       console.log("ab mesage aa rha", message)
       dispatch(updateContact(message));
     }))
-  // }, [dispatch, socket]);
+  }, [dispatch, socket]);
+
+  const fetchContacts = async () => {
+    try {
+      const response = await axios.get(`${SERVER_URL}/users`);
+      dispatch(setContacts(response.data));
+    } catch (error) {
+      console.error("Error fetching contacts:", error);
+      Alert.alert("Error", "Failed to fetch contacts!");
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
