@@ -1,45 +1,55 @@
+import React, { useContext, useEffect } from "react";
+import { SafeAreaView, Text } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
 import Home from "../../screens/Home";
 import ChatScreen from "../../screens/ChatScreen";
-import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "../../store";
+import { loadContacts, updateContact } from "../../store/slices/contactsSlice"; 
 import { getSocket } from "../../services/socket";
-import { useDispatch } from "react-redux";
-import { setContacts, updateContact } from "../../store/slices/contactsSlice";
-import { SERVER_URL } from "../../apis";
-import axios from "axios";
-import { Alert } from "react-native";
+import UserContext from "../../context/userContext";
 
 const AuthStack = createNativeStackNavigator<AuthStackRoutes>();
 
 export default function AuthStackLayout() {
   const socket = getSocket();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
+  const context = useContext(UserContext);
+  if (!context) {
+    throw new Error("Home screen must be used without a UserContextProvider");
+  }
+  const { user } = context;
+
+  // Get loading and error states from Redux store
+  const { loading, error } = useSelector((state: RootState) => state.contacts);
+
+  // Fetch contacts when the user is available
   useEffect(() => {
-    socket.on("receive_message", ((message: Message) => {
-      console.log("ab mesage aa rha", message)
-      dispatch(updateContact(message));
-    }))
-  }, [dispatch, socket]);
-
-  const fetchContacts = async () => {
-    try {
-      const response = await axios.get(`${SERVER_URL}/users`);
-      dispatch(setContacts(response.data));
-    } catch (error) {
-      console.error("Error fetching contacts:", error);
-      Alert.alert("Error", "Failed to fetch contacts!");
+    if (user) {
+      dispatch(loadContacts(user)); 
     }
-  };
+  }, [dispatch, user]);
 
+  // Socket listener for received messages
   useEffect(() => {
-    fetchContacts();
-  }, []);
+    socket.on("receive_message", (message: Message) => {
+      dispatch(updateContact(message)); // Update contact on new message
+    });
+
+    // Cleanup the socket listener when component unmounts
+    // return () => {
+    //   socket.off("receive_message");
+    // };
+  }, [dispatch, socket]);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
+      {/* Show loading or error message */}
+      {loading && <Text>Loading contacts...</Text>}
+      {error && <Text style={{ color: "red" }}>{error}</Text>}
+
       <AuthStack.Navigator initialRouteName={AUTH_STACK_ROUTES.HOME_SCREEN}>
         <AuthStack.Screen
           name={AUTH_STACK_ROUTES.HOME_SCREEN}

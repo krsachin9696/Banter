@@ -4,4 +4,4 @@ const ip3 = '192.1.125.201'
 const ip4 = '192.168.146.228'
 const realme = '192.168.246.228'
 
-export const SERVER_URL = `http://${realme}:3000`;
+export const SERVER_URL = `http://${ip3}:3000`;

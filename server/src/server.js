@@ -26,13 +26,12 @@ const messages = []; // Example: { senderId: string, receiverId: string, message
 
 app.get("/", (req, res) => {
   console.log("server is up and running");
-  return res.status(200).json({ message: "server is up and running"})
+  return res.status(200).json({ message: "server is up and running" })
 })
 
 // API to register a user
 app.post("/register", (req, res) => {
   const { name } = req.body;
-  console.log("this is name", name);
 
   if (!name || name.trim() === "") {
     return res.status(400).json({ error: "Name is required" });
@@ -52,17 +51,20 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/users", (req, res) => {
-  const enrichedUsers = users.map((user) => {
-    // Get the latest message for the user (example logic)
-    const userMessages = messages
-      .filter((msg) => msg.receiverId === user.id)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const userID = req.headers.userid;
+  const enrichedUsers = users
+    .filter((user) => user.id !== userID)
+    .map((user) => {
+      // Get the latest message for the user (example logic)
+      const userMessages = messages
+        .filter((msg) => msg.receiverId === user.id)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    const latestMessage = userMessages[0]?.message || "No messages yet";
-    const time = userMessages[0]?.timestamp || "N/A";
+      const latestMessage = userMessages[0]?.message || "No messages yet";
+      const time = userMessages[0]?.timestamp || "N/A";
 
-    return { userID: user.id, name: user.name, latestMessage, time };
-  });
+      return { userID: user.id, name: user.name, latestMessage, time };
+    });
 
   return res.status(200).json(enrichedUsers);
 });
@@ -109,13 +111,10 @@ io.on("connection", (socket) => {
 
     const receiverID = newMessage.receiverID;
     const receiverSocketId = userSocketMap[receiverID];
-    console.log(newMessage, 'this is the incoming message');
-    console.log(userSocketMap, "this is map", receiverSocketId, "receiver socket id");
 
     if (receiverSocketId) {
       // Emit message to the receiver
       io.to(receiverSocketId).emit("receive_message", newMessage);
-      console.log(`Message sent from ${newMessage}`);
     } else {
       console.log(`User ${receiverID} is not online.`);
     }
