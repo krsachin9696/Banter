@@ -16,9 +16,13 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { getSocket } from "../../services/socket";
 import styles from "./styles";
 import RenderMessage from "./components/renderMessage";
-import getCurrentTime from "../../utils/getCurrentTime";
 import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
 import UserContext from "../../context/userContext";
+import renderIntro from "./components/renderIntro";
+import sendMessage from "./services/sendMessage";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../store";
+import { addMessage, setCurrentChat, setMessages } from "../../store/slices/messagesSlice";
 
 interface ChatScreen
   extends NativeStackScreenProps<
@@ -40,55 +44,27 @@ export default function ChatScreen({
 
   const { user } = context;
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const { messages, currentChat } = useSelector((state: RootState) => state.messages);
+
+  // const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
   const socket = getSocket();
 
-  const handleSendMessage = (type: MessageType) => {
-    if (!socket) {
-      Alert.alert("Error", "Socket connection not established!");
-      return;
-    }
-
-    if (type === "text" && currentMessage.trim()) {
-      const newMessage: Message = {
-        id: `${Date.now()}`,
-        type,
-        text: currentMessage.trim(),
-        senderID: user?.id || "sksd",
-        timestamp: getCurrentTime(),
-        status: "sent",
-        receiverID: receiverId,
-      };
-
-      // Update local state
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-      setCurrentMessage("");
-
-      socket.emit("send_message", { ...newMessage });
-    }
-  };
-
-  const renderIntro = () => (
-    <View style={styles.introContainer}>
-      <Text style={styles.introText}>
-        This is the very beginning of your direct message history with{" "}
-        <Text style={styles.boldText}>{name}</Text>.
-      </Text>
-    </View>
-  );
-
   useEffect(() => {
-    if (socket) {
-      // Listen for incoming messages
-      socket.on("receive_message", (message: Message) => {
-        setMessages((prevMessages) => [...prevMessages, message]);
-      });
-    }
-    flatListRef.current?.scrollToEnd({ animated: true });
-  }, [socket]);
+    // Set the current chat to Redux store
+    dispatch(setCurrentChat(receiverId));
+    console.log('current chat updated', currentChat);
+
+    // Cleanup on component unmount
+    return () => {
+      dispatch(setCurrentChat(null));
+      dispatch(setMessages([]));
+    };
+    // }, [dispatch, receiverId]);
+  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -104,7 +80,8 @@ export default function ChatScreen({
           renderItem={({ item }) => <RenderMessage item={item} currentUser={user!} />}
           contentContainerStyle={styles.messagesContainer}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={renderIntro}
+          // ListHeaderComponent={renderIntro(name)}
+          ListHeaderComponent={renderIntro(currentChat!)}
         />
         <View style={styles.inputContainer}>
           <TouchableOpacity
@@ -121,7 +98,15 @@ export default function ChatScreen({
           />
           <TouchableOpacity
             style={styles.sendButton}
-            onPress={() => handleSendMessage("text")}>
+            onPress={() => sendMessage(
+              "text",
+              currentMessage,
+              user?.id!,
+              receiverId,
+              socket,
+              dispatch,
+              setCurrentMessage
+            )}>
             <Ionicons name="send" size={20} color="white" />
           </TouchableOpacity>
         </View>

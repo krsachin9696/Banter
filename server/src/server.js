@@ -23,6 +23,7 @@ app.use(bodyParser.json());
 // const users: { id: string; name: string }[] = []; // type annotation is not required over here
 const users = [];
 const messages = []; // Example: { senderId: string, receiverId: string, message: string, timestamp: string }
+const userSocketMap = {}; // { userID: socket.id }
 
 app.get("/", (req, res) => {
   console.log("server is up and running");
@@ -94,7 +95,9 @@ app.post("/messages", (req, res) => {
   return res.status(201).json({ message: "Message sent successfully", newMessage });
 });
 
-const userSocketMap = {}; // { userID: socket.id }
+app.get("/getUsers", (req, res) => {
+  res.status(200).json({users, userSocketMap});
+})
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -108,7 +111,6 @@ io.on("connection", (socket) => {
 
   // Handle one-to-one messaging
   socket.on("send_message", (newMessage) => {
-
     const receiverID = newMessage.receiverID;
     const receiverSocketId = userSocketMap[receiverID];
 

@@ -6,15 +6,17 @@ import Home from "../../screens/Home";
 import ChatScreen from "../../screens/ChatScreen";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../store";
-import { loadContacts, updateContact } from "../../store/slices/contactsSlice"; 
+import { loadContacts, updateContact } from "../../store/slices/contactsSlice";
 import { getSocket } from "../../services/socket";
 import UserContext from "../../context/userContext";
+import { addMessage } from "../../store/slices/messagesSlice";
 
 const AuthStack = createNativeStackNavigator<AuthStackRoutes>();
 
 export default function AuthStackLayout() {
   const socket = getSocket();
   const dispatch = useDispatch<AppDispatch>();
+  const { currentChat } = useSelector((state: RootState) => state.messages);
 
   const context = useContext(UserContext);
   if (!context) {
@@ -28,21 +30,27 @@ export default function AuthStackLayout() {
   // Fetch contacts when the user is available
   useEffect(() => {
     if (user) {
-      dispatch(loadContacts(user)); 
+      dispatch(loadContacts(user));
     }
   }, [dispatch, user]);
 
-  // Socket listener for received messages
   useEffect(() => {
-    socket.on("receive_message", (message: Message) => {
-      dispatch(updateContact(message)); // Update contact on new message
-    });
+    const handleMessage = (message: Message) => {
+      dispatch(updateContact(message));
 
-    // Cleanup the socket listener when component unmounts
-    // return () => {
-    //   socket.off("receive_message");
-    // };
-  }, [dispatch, socket]);
+      if (message.senderID === currentChat) {
+        dispatch(addMessage(message));
+      }
+    };
+
+    socket.on("receive_message", handleMessage);
+
+    // Cleanup function to remove the event listener
+    return () => {
+      socket.off("receive_message", handleMessage);
+    };
+  }, [currentChat]);
+
 
   return (
     <SafeAreaView style={{ flex: 1 }}>

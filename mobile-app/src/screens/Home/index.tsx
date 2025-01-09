@@ -13,7 +13,6 @@ import ContactCard from "./components/contactCard";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AuthStackRoutes } from "../../routes/auth-stack";
 import UserContext from "../../context/userContext";
-import { getSocket } from "../../services/socket";
 import { styles } from "./styles";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../store";
@@ -24,7 +23,6 @@ interface HomeScreenProps
 
 const Home = ({ route, navigation }: HomeScreenProps) => {
   const context = useContext(UserContext);
-  const socket = getSocket();
   const dispatch = useDispatch<AppDispatch>();
 
   if (!context) {
