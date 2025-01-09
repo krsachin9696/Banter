@@ -96,4 +96,30 @@ export const styles = StyleSheet.create({
         fontSize: sizes.TEXT.basic,
         color: "#808080",
     },
+    messageLine: {
+        width: '100%',
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: 'space-between'
+    },
+    messageStatusText: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    unreadBadge: {
+        backgroundColor: colors.BLUE_GREEN,
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginLeft: 10,
+    },
+    unreadBadgeText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
 });

@@ -51,26 +51,73 @@ app.post("/register", (req, res) => {
   return res.status(201).json({ message: "User registered successfully", user });
 });
 
+// app.get("/users", (req, res) => {
+//   const userID = req.headers.userid;
+//   const enrichedUsers = users
+//     .filter((user) => user.id !== userID)
+//     .map((user) => {
+//       // Get the latest message for the user (example logic)
+//       const userMessages = messages
+//         .filter((msg) => msg.receiverId === user.id)
+//         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+//       const latestMessage = userMessages[0]?.message || "No messages yet";
+//       const time = userMessages[0]?.timestamp || "N/A";
+//       const status = userMessages[0]?.status
+
+//       console.log(userMessages[0]);
+
+//       return { userID: user.id, name: user.name, latestMessage, time, status};
+//     });
+
+//   return res.status(200).json(enrichedUsers);
+// });
+
+// API to send a message
+
 app.get("/users", (req, res) => {
-  const userID = req.headers.userid;
+  const userID = req.headers.userid; // The user ID making the request
+  if (!userID) {
+    return res.status(400).json({ error: "UserID header is required" });
+  }
+
   const enrichedUsers = users
-    .filter((user) => user.id !== userID)
+    .filter((user) => user.id !== userID) // Filter out the current user
     .map((user) => {
-      // Get the latest message for the user (example logic)
+      // Get all messages involving the current user and the other user (sender or receiver)
       const userMessages = messages
-        .filter((msg) => msg.receiverId === user.id)
-        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        .filter(
+          (msg) =>
+            (msg.receiverID === user.id && msg.senderID === userID) ||
+            (msg.senderID === user.id && msg.receiverID === userID)
+        )
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort by timestamp (most recent first)
 
-      const latestMessage = userMessages[0]?.message || "No messages yet";
-      const time = userMessages[0]?.timestamp || "N/A";
+      // Get the latest message, time, and status
+      const latestMessage = userMessages.length > 0 ? userMessages[0].text : "No messages yet";
+      const time = userMessages.length > 0 ? userMessages[0].timestamp : "N/A";
+      const status = userMessages.length > 0 ? userMessages[0].status : "N/A";
 
-      return { userID: user.id, name: user.name, latestMessage, time };
+      // Calculate unread messages by counting those with status "sent" or "delivered" for the current user
+      const unreadMessages = userMessages.filter(
+        (msg) =>
+          msg.receiverID === userID && (msg.status === "sent" || msg.status === "delivered")
+      ).length;
+
+      return {
+        userID: user.id,
+        name: user.name,
+        latestMessage,
+        time,
+        status,
+        unreadMessages, // Adding unread message count
+      };
     });
 
   return res.status(200).json(enrichedUsers);
 });
 
-// API to send a message
+
 app.post("/messages", (req, res) => {
   const { senderId, receiverId, message } = req.body;
 
@@ -117,7 +164,7 @@ app.get("/messages/conversation", (req, res) => {
 
 
 app.get("/getUsers", (req, res) => {
-  res.status(200).json({ users, userSocketMap });
+  res.status(200).json({ users, userSocketMap, messages });
 })
 
 io.on("connection", (socket) => {

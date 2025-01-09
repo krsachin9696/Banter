@@ -40,6 +40,7 @@ const contactsSlice = createSlice({
             ...contact,
             latestMessage: message.text || (message.mediaUri ? "[Media]" : ""),
             time: message.timestamp,
+            unreadMessages: contact.unreadMessages + 1,
           };
         }
         return contact;
