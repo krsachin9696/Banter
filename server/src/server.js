@@ -95,8 +95,29 @@ app.post("/messages", (req, res) => {
   return res.status(201).json({ message: "Message sent successfully", newMessage });
 });
 
+app.get("/messages/conversation", (req, res) => {
+  const { userId, otherUserId } = req.query;
+
+  if (!userId || !otherUserId) {
+    return res.status(400).json({ error: "Both userId and otherUserId are required" });
+  }
+
+  // Filter messages that are exchanged between the two users
+  const conversation = messages.filter(
+    (msg) =>
+      (msg.senderID === userId && msg.receiverID === otherUserId) ||
+      (msg.senderID === otherUserId && msg.receiverID === userId)
+  );
+
+  // Sort messages by timestamp (oldest first)
+  conversation.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  return res.status(200).json({ messages: conversation });
+});
+
+
 app.get("/getUsers", (req, res) => {
-  res.status(200).json({users, userSocketMap});
+  res.status(200).json({ users, userSocketMap });
 })
 
 io.on("connection", (socket) => {
@@ -111,6 +132,9 @@ io.on("connection", (socket) => {
 
   // Handle one-to-one messaging
   socket.on("send_message", (newMessage) => {
+    // Store the message in the in-memory data store
+    messages.push(newMessage);
+
     const receiverID = newMessage.receiverID;
     const receiverSocketId = userSocketMap[receiverID];
 

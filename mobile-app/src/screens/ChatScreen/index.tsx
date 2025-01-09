@@ -1,14 +1,12 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   StatusBar,
-  Text,
   View,
   TextInput,
   FlatList,
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from "react-native";
 import colors from "../../constants/colors";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -22,7 +20,8 @@ import renderIntro from "./components/renderIntro";
 import sendMessage from "./services/sendMessage";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store";
-import { addMessage, setCurrentChat, setMessages } from "../../store/slices/messagesSlice";
+import { setCurrentChat, setMessages } from "../../store/slices/messagesSlice";
+import { fetchConversation } from "./services/fetchConversation";
 
 interface ChatScreen
   extends NativeStackScreenProps<
@@ -47,7 +46,6 @@ export default function ChatScreen({
   const dispatch = useDispatch<AppDispatch>();
   const { messages, currentChat } = useSelector((state: RootState) => state.messages);
 
-  // const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
@@ -55,16 +53,24 @@ export default function ChatScreen({
 
   useEffect(() => {
     // Set the current chat to Redux store
-    dispatch(setCurrentChat(receiverId));
-    console.log('current chat updated', currentChat);
+    dispatch(setCurrentChat(receiverId))
+
+    if (user?.id) {
+      fetchConversation(user.id, receiverId, dispatch);
+    }
 
     // Cleanup on component unmount
     return () => {
       dispatch(setCurrentChat(null));
       dispatch(setMessages([]));
     };
-    // }, [dispatch, receiverId]);
   }, []);
+
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages]);
 
   return (
     <KeyboardAvoidingView
@@ -80,8 +86,7 @@ export default function ChatScreen({
           renderItem={({ item }) => <RenderMessage item={item} currentUser={user!} />}
           contentContainerStyle={styles.messagesContainer}
           showsVerticalScrollIndicator={false}
-          // ListHeaderComponent={renderIntro(name)}
-          ListHeaderComponent={renderIntro(currentChat!)}
+          ListHeaderComponent={renderIntro(name)}
         />
         <View style={styles.inputContainer}>
           <TouchableOpacity
