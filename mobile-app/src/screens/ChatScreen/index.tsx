@@ -1,131 +1,76 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   StatusBar,
-  StyleSheet,
-  Text,
   View,
   TextInput,
   FlatList,
   TouchableOpacity,
-  Image,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from "react-native";
 import colors from "../../constants/colors";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { ROOT_STACK_ROUTES, RootStackRoutes } from "../../routes/root_satck";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import sizes from "../../constants/sizes";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import * as ImagePicker from "expo-image-picker";
 import { getSocket } from "../../services/socket";
 import styles from "./styles";
 import RenderMessage from "./components/renderMessage";
+import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
+import UserContext from "../../context/userContext";
+import renderIntro from "./components/renderIntro";
+import sendMessage from "./services/sendMessage";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "../../store";
+import { setCurrentChat, setMessages } from "../../store/slices/messagesSlice";
+import { fetchConversation } from "./services/fetchConversation";
 
 interface ChatScreen
   extends NativeStackScreenProps<
-    RootStackRoutes,
-    ROOT_STACK_ROUTES.CHAT_SCREEN
-  > {}
+    AuthStackRoutes,
+    AUTH_STACK_ROUTES.CHAT_SCREEN
+  > { }
 
 export default function ChatScreen({
   navigation,
   route,
 }: ChatScreen): JSX.Element {
-  const { id: receiverId, name, currentUser } = route.params;
-  const currentUserId = currentUser.id;
+  const { id: receiverId, name } = route.params;
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const context = useContext(UserContext);
+
+  if (!context) {
+    throw new Error("Home screen must be used without a UserContextProvider");
+  }
+
+  const { user } = context;
+
+  const dispatch = useDispatch<AppDispatch>();
+  const { messages, currentChat } = useSelector((state: RootState) => state.messages);
+
   const [currentMessage, setCurrentMessage] = useState("");
   const flatListRef = useRef<FlatList>(null);
 
   const socket = getSocket();
 
-  const handleSendMessage = (type: MessageType, content?: string) => {
-    if (!socket) {
-      Alert.alert("Error", "Socket connection not established!");
-      return;
+  useEffect(() => {
+    // Set the current chat to Redux store
+    dispatch(setCurrentChat(receiverId))
+
+    if (user?.id) {
+      fetchConversation(user.id, receiverId, dispatch);
     }
 
-    if (type === "text" && currentMessage.trim()) {
-      const newMessage: Message = {
-        id: `${Date.now()}`,
-        type,
-        text: currentMessage.trim(),
-        senderID: currentUser.id,
-        timestamp: getCurrentTime(),
-        status: "sent",
-        receiverID: receiverId,
-      };
-
-      // Update local state
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-      setCurrentMessage("");
-
-      socket.emit("send_message", {...newMessage});
-    } else if ((type === "image" || type === "video") && content) {
-      const newMessage: Message = {
-        id: `${Date.now()}`,
-        type,
-        mediaUri: content,
-        senderID: currentUser.id,
-        timestamp: getCurrentTime(),
-        status: "sent",
-        receiverID: receiverId,
-      };
-
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-      socket.emit("send_message", {
-        senderId: currentUserId,
-        receiverId,
-        message: newMessage.mediaUri,
-      });
-    }
-  };
-
-  const pickMedia = async (type: MessageType) => {
-    let result;
-    if (type === "image") {
-      result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: false,
-        quality: 1,
-      });
-    }
-    if (
-      result &&
-      !result.canceled &&
-      result.assets &&
-      result.assets.length > 0
-    ) {
-      handleSendMessage(type, result.assets[0].uri);
-    }
-  };
-
-  const renderIntro = () => (
-    <View style={styles.introContainer}>
-      <Text style={styles.introText}>
-        This is the very beginning of your direct message history with{" "}
-        <Text style={styles.boldText}>{name}</Text>.
-      </Text>
-    </View>
-  );
+    // Cleanup on component unmount
+    return () => {
+      dispatch(setCurrentChat(null));
+      dispatch(setMessages([]));
+    };
+  }, []);
 
   useEffect(() => {
-    if (socket) {
-      // Listen for incoming messages
-      socket.on("receive_message", (message: Message) => {
-        setMessages((prevMessages) => [...prevMessages, message]);
-      });
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({ animated: true });
     }
-    flatListRef.current?.scrollToEnd({ animated: true });
-    return () => {
-      if (socket) {
-        socket.off("receive_message");
-      }
-    };
-  }, [socket, messages]);
+  }, [messages]);
 
   return (
     <KeyboardAvoidingView
@@ -138,15 +83,16 @@ export default function ChatScreen({
           ref={flatListRef}
           data={messages}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <RenderMessage item={item} currentUser={currentUser} />}
+          renderItem={({ item }) => <RenderMessage item={item} currentUser={user!} />}
           contentContainerStyle={styles.messagesContainer}
           showsVerticalScrollIndicator={false}
-          ListHeaderComponent={renderIntro}
+          ListHeaderComponent={renderIntro(name)}
         />
         <View style={styles.inputContainer}>
           <TouchableOpacity
             style={styles.mediaButton}
-            onPress={() => pickMedia("image")}>
+          // onPress={() => pickMedia("image")}
+          >
             <Ionicons name="image" size={24} color={colors.DARK_GREY} />
           </TouchableOpacity>
           <TextInput
@@ -157,7 +103,15 @@ export default function ChatScreen({
           />
           <TouchableOpacity
             style={styles.sendButton}
-            onPress={() => handleSendMessage("text")}>
+            onPress={() => sendMessage(
+              "text",
+              currentMessage,
+              user?.id!,
+              receiverId,
+              socket,
+              dispatch,
+              setCurrentMessage
+            )}>
             <Ionicons name="send" size={20} color="white" />
           </TouchableOpacity>
         </View>

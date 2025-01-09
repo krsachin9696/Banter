@@ -1,46 +1,42 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import ChatScreen from "./screens/ChatScreen";
-import Home from "./screens/Home/";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import { ROOT_STACK_ROUTES, RootStackRoutes } from "./routes/root_satck";
-import RegisterScreen from "./screens/registration";
+import { ROOT_STACK_ROUTES, RootStackRoutes } from "./routes/root-satck";
+import UnauthStackLayout from "./layouts/unauth-stack";
+import AuthStackLayout from "./layouts/auth-stack";
+import UserContextProvider from "./context/UserContextProvider";
+import { Provider } from "react-redux";
+import store from "./store";
 
 const Stack = createNativeStackNavigator<RootStackRoutes>();
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <SafeAreaProvider>
-        <SafeAreaView style={{ flex: 1 }}>
-          <Stack.Navigator initialRouteName={ROOT_STACK_ROUTES.REGISTRATION}>
-            <Stack.Screen
-              name={ROOT_STACK_ROUTES.REGISTRATION}
-              component={RegisterScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name={ROOT_STACK_ROUTES.HOME_SCREEN}
-              component={Home}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name={ROOT_STACK_ROUTES.CHAT_SCREEN}
-              component={ChatScreen}
-              options={({ route }) => {
-                const { name } = route.params;
-                return {
-                  headerTitle: name,
-                };
-              }}
-            />
-          </Stack.Navigator>
-        </SafeAreaView>
-      </SafeAreaProvider>
-    </NavigationContainer>
+    <Provider store={store}>
+      <UserContextProvider>
+        <NavigationContainer>
+          <SafeAreaProvider>
+            <SafeAreaView style={{ flex: 1 }}>
+              <Stack.Navigator initialRouteName={ROOT_STACK_ROUTES.UNAUTH_STACK_LAYOUT}>
+                <Stack.Screen
+                  name={ROOT_STACK_ROUTES.UNAUTH_STACK_LAYOUT}
+                  component={UnauthStackLayout}
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+                <Stack.Screen
+                  name={ROOT_STACK_ROUTES.AUTH_STACK_LAYOUT}
+                  component={AuthStackLayout}
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+              </Stack.Navigator>
+            </SafeAreaView>
+          </SafeAreaProvider>
+        </NavigationContainer>
+      </UserContextProvider>
+    </Provider>
   );
 }

@@ -23,11 +23,16 @@ app.use(bodyParser.json());
 // const users: { id: string; name: string }[] = []; // type annotation is not required over here
 const users = [];
 const messages = []; // Example: { senderId: string, receiverId: string, message: string, timestamp: string }
+const userSocketMap = {}; // { userID: socket.id }
+
+app.get("/", (req, res) => {
+  console.log("server is up and running");
+  return res.status(200).json({ message: "server is up and running" })
+})
 
 // API to register a user
 app.post("/register", (req, res) => {
   const { name } = req.body;
-  console.log("this is name", name);
 
   if (!name || name.trim() === "") {
     return res.status(400).json({ error: "Name is required" });
@@ -47,17 +52,20 @@ app.post("/register", (req, res) => {
 });
 
 app.get("/users", (req, res) => {
-  const enrichedUsers = users.map((user) => {
-    // Get the latest message for the user (example logic)
-    const userMessages = messages
-      .filter((msg) => msg.receiverId === user.id)
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  const userID = req.headers.userid;
+  const enrichedUsers = users
+    .filter((user) => user.id !== userID)
+    .map((user) => {
+      // Get the latest message for the user (example logic)
+      const userMessages = messages
+        .filter((msg) => msg.receiverId === user.id)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-    const latestMessage = userMessages[0]?.message || "No messages yet";
-    const time = userMessages[0]?.timestamp || "N/A";
+      const latestMessage = userMessages[0]?.message || "No messages yet";
+      const time = userMessages[0]?.timestamp || "N/A";
 
-    return { id: user.id, name: user.name, latestMessage, time };
-  });
+      return { userID: user.id, name: user.name, latestMessage, time };
+    });
 
   return res.status(200).json(enrichedUsers);
 });
@@ -87,7 +95,30 @@ app.post("/messages", (req, res) => {
   return res.status(201).json({ message: "Message sent successfully", newMessage });
 });
 
-const userSocketMap = {}; // { userID: socket.id }
+app.get("/messages/conversation", (req, res) => {
+  const { userId, otherUserId } = req.query;
+
+  if (!userId || !otherUserId) {
+    return res.status(400).json({ error: "Both userId and otherUserId are required" });
+  }
+
+  // Filter messages that are exchanged between the two users
+  const conversation = messages.filter(
+    (msg) =>
+      (msg.senderID === userId && msg.receiverID === otherUserId) ||
+      (msg.senderID === otherUserId && msg.receiverID === userId)
+  );
+
+  // Sort messages by timestamp (oldest first)
+  conversation.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  return res.status(200).json({ messages: conversation });
+});
+
+
+app.get("/getUsers", (req, res) => {
+  res.status(200).json({ users, userSocketMap });
+})
 
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -96,10 +127,13 @@ io.on("connection", (socket) => {
   socket.on("register_user", (user) => {
     const userID = user.userID;
     userSocketMap[userID] = socket.id;
+    // console.log(userSocketMap, "userSocketMap");
   });
 
   // Handle one-to-one messaging
   socket.on("send_message", (newMessage) => {
+    // Store the message in the in-memory data store
+    messages.push(newMessage);
 
     const receiverID = newMessage.receiverID;
     const receiverSocketId = userSocketMap[receiverID];
@@ -107,7 +141,6 @@ io.on("connection", (socket) => {
     if (receiverSocketId) {
       // Emit message to the receiver
       io.to(receiverSocketId).emit("receive_message", newMessage);
-      console.log(`Message sent from ${newMessage}`);
     } else {
       console.log(`User ${receiverID} is not online.`);
     }

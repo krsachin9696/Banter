@@ -1,6 +1,6 @@
 interface ContactInfoProps {
-  id: string;
+  userID: string;
   name: string;
-  latestMessage: string;
+  latestMessage: string | undefined;
   time: string;
 }
