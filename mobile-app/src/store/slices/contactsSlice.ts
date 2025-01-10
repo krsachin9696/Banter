@@ -34,7 +34,7 @@ const contactsSlice = createSlice({
   reducers: {
     updateContact(state, action: PayloadAction<Message>) {
       const message = action.payload;
-      state.contacts = state.contacts.map((contact : ContactInfoProps) => {
+      state.contacts = state.contacts.map((contact: ContactInfoProps) => {
         if (contact.userID === message.senderID) {
           return {
             ...contact,
@@ -46,6 +46,19 @@ const contactsSlice = createSlice({
         return contact;
       });
     },
+    updateUnreadMessageCounter(state, action: PayloadAction<string>) {
+
+      const userID = action.payload;
+      state.contacts = state.contacts.map((contact: ContactInfoProps) => {
+        if (contact.userID === userID) {
+          return {
+            ...contact,
+            unreadMessages: 0,
+          }
+        }
+        return contact;
+      });
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -64,5 +77,5 @@ const contactsSlice = createSlice({
   },
 });
 
-export const { updateContact } = contactsSlice.actions;
+export const { updateContact, updateUnreadMessageCounter } = contactsSlice.actions;
 export default contactsSlice.reducer;

@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 import getCurrentTime from "../../../utils/getCurrentTime";
 import { AppDispatch } from "../../../store";
 import { addMessage } from "../../../store/slices/messagesSlice";
+import { updateContact } from "../../../store/slices/contactsSlice";
 
 const sendMessage = (
 	type: MessageType,
@@ -33,6 +34,18 @@ const sendMessage = (
 		// setMessages((prevMessages: Message[]) => [...prevMessages, newMessage]);
 		dispatch(addMessage(newMessage));
 		setCurrentMessage("");
+
+		const updatingMessage: Message = {
+			id: `${Date.now()}`,
+			type,
+			text: currentMessage.trim(),
+			senderID: receiverId,
+			timestamp: getCurrentTime(),
+			status: "sent",
+			receiverID: userID,
+		};
+
+		dispatch(updateContact(updatingMessage));
 
 		socket.emit("send_message", { ...newMessage });
 	}

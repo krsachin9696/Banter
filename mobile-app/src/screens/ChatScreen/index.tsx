@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../store";
 import { setCurrentChat, setMessages } from "../../store/slices/messagesSlice";
 import { fetchConversation } from "./services/fetchConversation";
+import { updateUnreadMessageCounter } from "../../store/slices/contactsSlice";
 
 interface ChatScreen
   extends NativeStackScreenProps<
@@ -53,7 +54,8 @@ export default function ChatScreen({
 
   useEffect(() => {
     // Set the current chat to Redux store
-    dispatch(setCurrentChat(receiverId))
+    dispatch(setCurrentChat(receiverId));
+    dispatch(updateUnreadMessageCounter(receiverId));
 
     if (user?.id) {
       fetchConversation(user.id, receiverId, dispatch);
@@ -64,7 +66,7 @@ export default function ChatScreen({
       dispatch(setCurrentChat(null));
       dispatch(setMessages([]));
     };
-  }, []);
+  }, [receiverId]);
 
   useEffect(() => {
     if (flatListRef.current) {
