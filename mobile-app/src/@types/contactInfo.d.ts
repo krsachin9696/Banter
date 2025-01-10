@@ -3,4 +3,6 @@ interface ContactInfoProps {
   name: string;
   latestMessage: string | undefined;
   time: string;
+  status?: MessageStatus;
+  unreadMessages: number;
 }

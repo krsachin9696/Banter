@@ -1,5 +1,5 @@
 import React, { useContext, useEffect } from "react";
-import { SafeAreaView, Text } from "react-native";
+import { Image, SafeAreaView, Text, TouchableOpacity, View } from "react-native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AUTH_STACK_ROUTES, AuthStackRoutes } from "../../routes/auth-stack";
 import Home from "../../screens/Home";
@@ -10,6 +10,8 @@ import { loadContacts, updateContact } from "../../store/slices/contactsSlice";
 import { getSocket } from "../../services/socket";
 import UserContext from "../../context/userContext";
 import { addMessage } from "../../store/slices/messagesSlice";
+import { Ionicons } from "@expo/vector-icons";
+import avatarImage from "../../assets/avatar.png";
 
 const AuthStack = createNativeStackNavigator<AuthStackRoutes>();
 
@@ -71,8 +73,35 @@ export default function AuthStackLayout() {
           component={ChatScreen}
           options={({ route }) => {
             const { name } = route.params;
+            // return {
+            //   headerTitle: name,
+            // };
+
             return {
-              headerTitle: name,
+              headerTitle: () => (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  {/* Avatar */}
+                  <Image source={avatarImage} style={{ width: 40, height: 40, borderRadius: 20, marginRight: 10 }} />
+                  
+                  {/* Name */}
+                  <Text style={{ fontSize: 18, fontWeight: "600" }}>
+                    {name}
+                  </Text>
+                </View>
+              ),
+              headerRight: () => (
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  {/* Call Icon */}
+                  <TouchableOpacity onPress={() => console.log("Call pressed")}>
+                    <Ionicons name="call" size={24} color="black" style={{ marginRight: 10 }} />
+                  </TouchableOpacity>
+
+                  {/* Three Dot Menu Icon */}
+                  <TouchableOpacity onPress={() => console.log("Menu pressed")}>
+                    <Ionicons name="ellipsis-vertical" size={24} color="black" />
+                  </TouchableOpacity>
+                </View>
+              ),
             };
           }}
         />
