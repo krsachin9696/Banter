@@ -51,29 +51,6 @@ app.post("/register", (req, res) => {
   return res.status(201).json({ message: "User registered successfully", user });
 });
 
-// app.get("/users", (req, res) => {
-//   const userID = req.headers.userid;
-//   const enrichedUsers = users
-//     .filter((user) => user.id !== userID)
-//     .map((user) => {
-//       // Get the latest message for the user (example logic)
-//       const userMessages = messages
-//         .filter((msg) => msg.receiverId === user.id)
-//         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-//       const latestMessage = userMessages[0]?.message || "No messages yet";
-//       const time = userMessages[0]?.timestamp || "N/A";
-//       const status = userMessages[0]?.status
-
-//       console.log(userMessages[0]);
-
-//       return { userID: user.id, name: user.name, latestMessage, time, status};
-//     });
-
-//   return res.status(200).json(enrichedUsers);
-// });
-
-// API to send a message
 
 app.get("/users", (req, res) => {
   const userID = req.headers.userid; // The user ID making the request
