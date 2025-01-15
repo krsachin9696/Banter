@@ -9,3 +9,11 @@ export const createConversationSchema = Joi.object({
     otherwise: Joi.forbidden(), // Name is forbidden for one-on-one conversations
   }),
 });
+
+export const sendMessageSchema = Joi.object({
+  convoID: Joi.string().uuid().required(),
+  userID: Joi.string().uuid().required(),
+  content: Joi.string().required(),
+  type: Joi.string().valid('text', 'image', 'video').default('text'),
+  attachment: Joi.string().optional(),
+});

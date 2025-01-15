@@ -1,6 +1,6 @@
 import logger from '../utils/logger.js';
 
-export const userSocketMap = {}; // Map userID to socket ID
+const userSocketMap = {}; // Map userID to socket ID
 
 const socketHandler = (io) => {
   io.on('connection', (socket) => {
@@ -63,4 +63,4 @@ const socketHandler = (io) => {
   });
 };
 
-export default socketHandler;
+export {socketHandler, userSocketMap};
