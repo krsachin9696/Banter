@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userID       String                    @id @default(uuid())
+  name         String
+  phone        String                    @unique
+  password     String
+  avatarUrl    String? // Optional field
+  createdAt    DateTime                  @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime                  @updatedAt @db.Timestamp(6)
+  deletedAt    DateTime? // For soft deletion
+  Messages     Message[] // Relation to Message
+  Participants ConversationParticipant[] // Relation to ConversationParticipant
+}
+
+model Conversation {
+  convoID      String                    @id @default(uuid())
+  name         String? // Optional field
+  isGroup      Boolean
+  createdAt    DateTime                  @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime                  @updatedAt @db.Timestamp(6)
+  deletedAt    DateTime? // For soft deletion
+  Participants ConversationParticipant[] // Relation to ConversationParticipant
+  Messages     Message[] // Relation to Message
+}
+
+model ConversationParticipant {
+  id        Int       @id @default(autoincrement())
+  convoID   String    @map("conversation_id")
+  userID    String    @map("user_id")
+  role      String    @default("member") // "member" or "admin"
+  joinedAt  DateTime  @default(now())
+  createdAt DateTime  @default(now()) @db.Timestamp(6) // Tracks record creation
+  updatedAt DateTime  @updatedAt @db.Timestamp(6) // Tracks updates
+  deletedAt DateTime? // For soft deletion
+
+  // Relations
+  Conversation Conversation @relation(fields: [convoID], references: [convoID], onDelete: Cascade)
+  User         User         @relation(fields: [userID], references: [userID], onDelete: Cascade)
+}
+
+model Message {
+  messageID  String    @id @default(uuid())
+  convoID    String    @map("conversation_id")
+  userID     String    @map("sender_id")
+  content    String
+  attachment String? // Optional field
+  type       String    @default("text") // Enum-like behavior: "text", "image", "video"
+  status     String    @default("sent") // Enum-like behavior: "sent", "delivered", "read"
+  createdAt  DateTime  @default(now()) @db.Timestamp(6)
+  updatedAt  DateTime  @updatedAt @db.Timestamp(6) // Tracks updates
+  deletedAt  DateTime? // For soft deletion
+
+  // Relations
+  Conversation Conversation @relation(fields: [convoID], references: [convoID], onDelete: Cascade)
+  User         User         @relation(fields: [userID], references: [userID], onDelete: Cascade)
+}
