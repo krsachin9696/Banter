@@ -7,6 +7,9 @@ import { loggerMiddleware } from './middlewares/loggerMiddleware.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import socketHandler from './sockets/socketHandler.js';
 import logger from './utils/logger.js';
+import authRoute from './features/auth/authRoutes.js';
+import userRoute from './features/users/userRoutes.js';
+import messageRoute from './features/messages/messageRoutes.js';
 
 const app = express();
 const server = createServer(app); // HTTP server for both Express and Socket.IO
@@ -40,6 +43,10 @@ app.get('/', (req, res) => {
   logger.info('GET / route accessed');
   res.json({ message: 'This is a route.' });
 });
+
+app.use('/api/auth', authRoute);
+app.use('/api/user', userRoute);
+app.use('/api/message', messageRoute);
 
 // Global error handler
 app.use(errorHandler);
