@@ -5,11 +5,12 @@ import 'dotenv/config';
 import cors from 'cors';
 import { loggerMiddleware } from './middlewares/loggerMiddleware.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-import socketHandler from './sockets/socketHandler.js';
+import { socketHandler } from './sockets/socketHandler.js';
 import logger from './utils/logger.js';
 import authRoute from './features/auth/authRoutes.js';
 import userRoute from './features/users/userRoutes.js';
 import messageRoute from './features/messages/messageRoutes.js';
+import { setIoInstance } from './sockets/socketManager.js';
 
 const app = express();
 const server = createServer(app); // HTTP server for both Express and Socket.IO
@@ -53,6 +54,7 @@ app.use(errorHandler);
 
 // Initialize Socket.IO handlers
 socketHandler(io);
+setIoInstance(io);
 
 // Start the server
 server.listen(PORT, () => {

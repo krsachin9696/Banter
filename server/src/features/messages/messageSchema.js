@@ -12,8 +12,7 @@ export const createConversationSchema = Joi.object({
 
 export const sendMessageSchema = Joi.object({
   convoID: Joi.string().uuid().required(),
-  userID: Joi.string().uuid().required(),
   content: Joi.string().required(),
   type: Joi.string().valid('text', 'image', 'video').default('text'),
-  attachment: Joi.string().optional(),
+  attachment: Joi.optional(),
 });

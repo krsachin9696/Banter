@@ -56,20 +56,15 @@ export const createConversation = async (userIDs, isGroup, name) => {
 
 // Save the message in the database
 export const saveMessage = async ({ convoID, userID, content, type, attachment }) => {
+
   const message = await prisma.message.create({
     data: {
-      convoID,
-      userID,
-      content,
-      type,
-      attachment,
-      // Establish relationships using `connect`
-      Conversation: {
-        connect: { convoID },
-      },
-      User: {
-        connect: { userID },
-      },
+      convoID, // Direct foreign key field
+      userID,  // Direct foreign key field
+      content, // Message content
+      type,    // Message type (e.g., "text", "image", etc.)
+      attachment, // Optional field
+      status: 'sent', // Default status
     },
     include: {
       User: {
@@ -81,21 +76,26 @@ export const saveMessage = async ({ convoID, userID, content, type, attachment }
       },
     },
   });
+  
 
   return {
     messageID: message.messageID,
     convoID: message.convoID,
-    sender: {
-      userID: message.User.userID,
-      name: message.User.name,
-      avatarUrl: message.User.avatarUrl,
-    },
+    senderID: message.User.userID,
     content: message.content,
     type: message.type,
     attachment: message.attachment,
     createdAt: message.createdAt,
   };
 };
+
+export const updateMessageStatus = async (messageID, status) => {
+  return prisma.message.update({
+    where: { messageID },
+    data: { status },
+  });
+};
+
 
 // Get participants of a conversation
 export const getConversationParticipants = async (convoID) => {
@@ -115,4 +115,49 @@ export const getConversationParticipants = async (convoID) => {
   });
 
   return conversation?.Participants.map((participant) => participant.User) || [];
+};
+
+export const getMessagesRepository = async ({ convoID, cursor, limit }) => {
+  const whereCondition = { convoID };
+
+  // Fetch messages from the database using Prisma
+  const messages = await prisma.message.findMany({
+    where: whereCondition,
+    orderBy: { createdAt: 'desc' }, // Order messages by the creation date (latest first)
+    take: limit + 1, // Fetch one extra message to determine if there's a next page
+    ...(cursor
+      ? { skip: 1, cursor: { messageID: cursor } } // Skip the first message if cursor is provided
+      : {}),
+    include: {
+      User: {
+        select: {
+          userID: true,
+          name: true,
+          avatarUrl: true,
+        },
+      },
+    },
+  });
+
+  // Check if there are more messages to fetch (based on the extra message)
+  const hasNextPage = messages.length > limit;
+  const nextCursor = hasNextPage ? messages.pop().messageID : null; // If there's a next page, return the last message's ID
+
+  // Restructure the message data as required
+  const formattedMessages = messages.map((message) => {
+    return {
+      messageID: message.messageID,
+      senderID: message.User.userID,
+      content: message.content,
+      attachment: message.attachment,
+      type: message.type,
+      status: message.status,
+      createdAt: message.createdAt,
+    };
+  });
+
+  return {
+    messages: formattedMessages, // Return the formatted messages
+    nextCursor,
+  };
 };

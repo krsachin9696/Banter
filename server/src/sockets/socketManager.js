@@ -1,10 +1,12 @@
-let io;
-const userSocketMap = {};
+let ioInstance;
 
-export const setSocketServer = (socketServer) => {
-  io = socketServer;
+export const setIoInstance = (io) => {
+  ioInstance = io;
 };
 
-export const getSocketServer = () => io;
-
-export const getUserSocketMap = () => userSocketMap;
+export const getIoInstance = () => {
+  if (!ioInstance) {
+    throw new Error('Socket.IO instance is not initialized!');
+  }
+  return ioInstance;
+};
